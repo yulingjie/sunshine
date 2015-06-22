@@ -1,6 +1,7 @@
 package com.example.ylj.sunshine;
 
 import android.app.Fragment;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +85,7 @@ public class ForecastFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.action_refresh: {
                 FetchWeatherTask task = new FetchWeatherTask();
-                task.execute("http://api.openweathermap.org/data/2.5/forecast/daily?q=London&units=metric&cnt=7");
+                task.execute("London","metric","7");
             }
             break;
         }
@@ -91,6 +93,16 @@ public class ForecastFragment extends Fragment {
     }
 
     class FetchWeatherTask extends AsyncTask<String, Void, String> {
+
+        final static String scheme = "http";
+        final static String dataPath = "data";
+        final static String numPath = "2.5";
+        final static String fcPath = "forecast";
+        final static String dailyPath = "daily";
+        final static String authority = "api.openweathermap.org";
+        final static String keyUnit = "unit";
+        final static String keyCnt = "cnt";
+        final static String keyPostcode = "q";
 
         @Override
         protected void onPreExecute() {
@@ -109,11 +121,25 @@ public class ForecastFragment extends Fragment {
 
         @Override
         protected String doInBackground(String... params) {
-            URL url = null;
+            String postcode = params[0];
+            String unit = params[1];
+            String cnt = params[2];
+            Uri.Builder uriBuilder = new Uri.Builder();
+            uriBuilder.scheme(scheme)
+                    .authority(authority)
+                    .appendPath(dataPath)
+                    .appendPath(numPath)
+                    .appendPath(fcPath)
+                    .appendPath(dailyPath)
+                    .appendQueryParameter(keyPostcode, postcode)
+                    .appendQueryParameter(keyUnit, unit)
+                    .appendQueryParameter(keyCnt, cnt);
+
+
             HttpURLConnection urlConnection = null;
             try {
-                url = new URL(params[0]);
-                urlConnection = (HttpURLConnection) url.openConnection();
+                URL url = new URL(uriBuilder.build().toString());
+                urlConnection = (HttpURLConnection)url.openConnection();
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                 String line;
                 StringBuilder builder = new StringBuilder();
