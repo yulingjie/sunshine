@@ -1,10 +1,11 @@
-package com.example.ylj.sunshine;
+package com.ylj.sunshine;
 
 import android.app.Fragment;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,8 +14,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import com.example.ylj.sunshine.R;
+import com.ylj.sunshine.weather.Forecast;
+import com.ylj.sunshine.weather.Forecasts;
+import com.ylj.sunshine.weather.Temperature;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -23,10 +28,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by ylj on 6/17/15.
@@ -34,23 +43,21 @@ import java.util.List;
 public class ForecastFragment extends Fragment {
 
     static final String TAG= "ForecastFagment";
-    private String[] strs;
-    private String jsonStr;
+    private List<String> strs;
+    ArrayAdapter<String> forecastAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        strs = new ArrayList<>();
+        strs.add("ShangHai, 5-15, Sun");
+        strs.add("BeiJing, 15-20, Cloudy");
+        strs.add("ChengDu, 20-25, Sun");
+        strs.add("Tianjing, 10-15, rainy");
+        strs.add("JingDeZheng, 20-27, sunny");
 
-        List<String> weatherList = new ArrayList<String>();
-        weatherList.add("ShangHai, 5-15, Sun");
-        weatherList.add("BeiJing, 15-20, Cloudy");
-        weatherList.add("ChengDu, 20-25, Sun");
-        weatherList.add("Tianjing, 10-15, rainy");
-        weatherList.add("JingDeZheng, 20-27, sunny");
 
-
-        strs = weatherList.toArray(new String[0]);
 
         setHasOptionsMenu(true);
 
@@ -64,8 +71,8 @@ public class ForecastFragment extends Fragment {
         // test code , maybe buggy
         ListView lv = (ListView) view.findViewById(R.id.listView);
 
-        ListAdapter la = new ArrayAdapter<String>(this.getActivity(), android.R.layout.simple_list_item_1, strs);
-        lv.setAdapter(la);
+        forecastAdapter = new ArrayAdapter<>(this.getActivity(), android.R.layout.simple_list_item_1, strs);
+        lv.setAdapter(forecastAdapter);
         return view;
     }
 
@@ -92,7 +99,7 @@ public class ForecastFragment extends Fragment {
         return true;
     }
 
-    class FetchWeatherTask extends AsyncTask<String, Void, String> {
+    class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
         final static String scheme = "http";
         final static String dataPath = "data";
@@ -107,20 +114,18 @@ public class ForecastFragment extends Fragment {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
-
         }
 
         @Override
-        protected void onPostExecute(String str) {
-
-            jsonStr = str;
-            Log.v(TAG, jsonStr);
+        protected void onPostExecute(String[] str) {
             super.onPostExecute(str);
+
+            forecastAdapter.clear();
+            forecastAdapter.addAll(str);
         }
 
         @Override
-        protected String doInBackground(String... params) {
+        protected String[] doInBackground(String... params) {
             String postcode = params[0];
             String unit = params[1];
             String cnt = params[2];
@@ -137,17 +142,18 @@ public class ForecastFragment extends Fragment {
 
 
             HttpURLConnection urlConnection = null;
+            String weatherStr = null;
             try {
                 URL url = new URL(uriBuilder.build().toString());
-                urlConnection = (HttpURLConnection)url.openConnection();
+                urlConnection = (HttpURLConnection) url.openConnection();
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
                 String line;
                 StringBuilder builder = new StringBuilder();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(in));
                 while ((line = reader.readLine()) != null) {
-                    builder.append(line + "\n");
+                    builder.append(line).append("\n");
                 }
-                return builder.toString();
+                weatherStr = builder.toString();
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -156,8 +162,52 @@ public class ForecastFragment extends Fragment {
                 if (urlConnection != null)
                     urlConnection.disconnect();
             }
+            if(weatherStr != null)
+            {
+                return parseForecasts(weatherStr);
+            }
             return null;
         }
+        private String getReadableDateString(long time){
+            // Because the API returns a unix timestamp (measured in seconds),
+            // it must be converted to milliseconds in order to be converted to valid date.
+            SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd", Locale.getDefault());
+            return shortenedDateFormat.format(time);
+        }
+        private String[] parseForecasts(String weatherStr) {
+            Forecasts forecasts = Forecasts.Create(weatherStr);
+            List<String> result = new ArrayList<String>();
+            Forecast[] forecastArray = forecasts.getForecasts();
+
+
+
+            Calendar calendar = new GregorianCalendar(TimeZone.getDefault(),Locale.getDefault());
+            calendar.setTimeInMillis(System.currentTimeMillis());
+            int startDay = calendar.get(Calendar.DAY_OF_YEAR);
+            for(int i =0; i != forecastArray.length; ++i)
+            {
+                Forecast forecast = forecastArray[i];
+                long dateTime;
+                calendar.set(Calendar.DAY_OF_YEAR, startDay + i);
+
+                SimpleDateFormat format = new SimpleDateFormat("EEE MMM dd", Locale.getDefault());
+                String day = format.format(calendar.getTime());
+                String desc = forecast.getWeather()[0].getDesc();
+                Temperature temp = forecast.getTemp();
+                String highAndLow = formatHighLows(temp.getMin(), temp.getMax());
+                result.add(day + "-" + desc + "-" + highAndLow);
+            }
+            return result.toArray(new String[0]);
+        }
+        private String formatHighLows(double high, double low) {
+            // For presentation, assume the user doesn't care about tenths of a degree.
+            long roundedHigh = Math.round(high);
+            long roundedLow = Math.round(low);
+
+            String highLowStr = roundedHigh + "/" + roundedLow;
+            return highLowStr;
+        }
+
     }
 
 }

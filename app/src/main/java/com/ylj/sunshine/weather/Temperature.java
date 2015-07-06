@@ -26,6 +26,8 @@ public class Temperature {
         this.max = max;
     }
 
+    public double getMax(){return max;}
+    public double getMin(){return min;}
     public void setNight(double night) {
         this.night = night;
     }

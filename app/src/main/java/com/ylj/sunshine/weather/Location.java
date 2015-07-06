@@ -12,6 +12,17 @@ public class Location {
     private double message;
     private City city;
 
+    public int getCode() {
+        return code;
+    }
+
+    public double getMessage() {
+        return message;
+    }
+
+    public City getCity() {
+        return city;
+    }
 
     public void setCity(City city) {
         this.city = city;

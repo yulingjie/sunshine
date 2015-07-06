@@ -36,6 +36,10 @@ public class Weather {
     public void setDesc(String desc) {
         this.desc = desc;
     }
+    public String getDesc()
+    {
+        return desc;
+    }
 
     public void setIcon(String icon) {
         this.icon = icon;

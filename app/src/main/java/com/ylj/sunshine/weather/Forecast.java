@@ -29,6 +29,10 @@ public class Forecast{
         this.temp = temp;
     }
 
+    public Temperature getTemp() {
+        return temp;
+    }
+
     public void setPressure(double pressure) {
         this.pressure = pressure;
     }
@@ -39,6 +43,10 @@ public class Forecast{
 
     public void setWeather(Weather[] weather) {
         this.weather = weather;
+    }
+    public Weather[] getWeather()
+    {
+        return weather;
     }
 
     public void setSpeed(double speed) {

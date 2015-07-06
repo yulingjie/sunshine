@@ -11,6 +11,18 @@ import java.util.List;
  * Created by ylj on 6/25/15.
  */
 public class Forecasts {
+    public Location getLocation() {
+        return location;
+    }
+
+    public int getCnt() {
+        return cnt;
+    }
+
+    public Forecast[] getForecasts() {
+        return forecasts;
+    }
+
     private Location location;
     private int cnt;
     private Forecast[] forecasts;
