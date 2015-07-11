@@ -1,9 +1,11 @@
-package com.example.ylj.sunshine;
+package com.ylj.sunshine;
 
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import com.ylj.sunshine.R;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -11,7 +13,8 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(
+                R.layout.activity_main);
 
     }
 

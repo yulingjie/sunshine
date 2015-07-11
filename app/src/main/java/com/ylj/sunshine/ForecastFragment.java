@@ -1,6 +1,7 @@
 package com.ylj.sunshine;
 
 import android.app.Fragment;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,7 +19,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.ylj.sunshine.R;
 import com.ylj.sunshine.weather.Forecast;
 import com.ylj.sunshine.weather.Forecasts;
 import com.ylj.sunshine.weather.Temperature;
@@ -78,8 +78,9 @@ public class ForecastFragment extends Fragment {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-               Toast.makeText(ForecastFragment.this.getActivity(),
-                       forecastAdapter.getItem(position), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ForecastFragment.this.getActivity(), DetailActivity.class);
+                intent.putExtra(Intent.EXTRA_TEXT, forecastAdapter.getItem(position));
+                startActivity(intent);
             }
         });
         return view;
