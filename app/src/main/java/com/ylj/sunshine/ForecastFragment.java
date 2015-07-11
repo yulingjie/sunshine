@@ -105,6 +105,11 @@ public class ForecastFragment extends Fragment {
                 task.execute("London","metric","7");
             }
             break;
+            case R.id.action_settings:{
+                Intent intent = new Intent(this.getActivity(), SettingsActivity.class);
+                this.startActivity(intent);
+            }
+            break;
         }
         return true;
     }

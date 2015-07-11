@@ -48,6 +48,14 @@ public class DetailActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
 
         //noinspection SimplifiableIfStatement
+        switch (item.getItemId())
+        {
+            case R.id.action_settings: {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+            }
+            break;
+        }
 
         return super.onOptionsItemSelected(item);
     }
