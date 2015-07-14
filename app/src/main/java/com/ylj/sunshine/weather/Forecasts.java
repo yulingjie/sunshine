@@ -43,10 +43,10 @@ public class Forecasts {
         try {
             json = new JSONObject(jsonStr);
             Location loc = new Location();
+            casts.setLocation(loc);
             loc.setCode(json.getInt("cod"));
             loc.setCity(City.Create(json.getJSONObject("city")));
             loc.setMessage(json.getDouble("message"));
-            casts.setLocation(loc);
             casts.setCnt(json.getInt("cnt"));
             JSONArray forecastObjs = json.getJSONArray("list");
             List<Forecast> forecastList = new ArrayList<Forecast>();

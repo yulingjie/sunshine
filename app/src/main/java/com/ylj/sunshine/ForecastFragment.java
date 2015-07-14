@@ -2,12 +2,12 @@ package com.ylj.sunshine;
 
 import android.app.Fragment;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
-import android.text.format.Time;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -44,7 +44,7 @@ import java.util.TimeZone;
  */
 public class ForecastFragment extends Fragment {
 
-    static final String TAG= "ForecastFagment";
+    static final String TAG = "ForecastFagment";
     private List<String> strs;
     ArrayAdapter<String> forecastAdapter;
 
@@ -60,8 +60,13 @@ public class ForecastFragment extends Fragment {
         strs.add("JingDeZheng, 20-27, sunny");
 
 
-
         setHasOptionsMenu(true);
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
 
     }
 
@@ -95,23 +100,31 @@ public class ForecastFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        refreshWeather();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_refresh: {
-                FetchWeatherTask task = new FetchWeatherTask();
-                task.execute("London","metric","7");
+                refreshWeather();
             }
             break;
-            case R.id.action_settings:{
+            case R.id.action_settings: {
                 Intent intent = new Intent(this.getActivity(), SettingsActivity.class);
                 this.startActivity(intent);
             }
             break;
         }
         return true;
+    }
+
+    void refreshWeather() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
+        String location = sharedPreferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+        String unit = sharedPreferences.getString(getString(R.string.pref_units_key),getString(R.string.pref_units_default));
+        FetchWeatherTask task = new FetchWeatherTask();
+        task.execute(location, unit, "7");
     }
 
     class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
@@ -122,7 +135,7 @@ public class ForecastFragment extends Fragment {
         final static String fcPath = "forecast";
         final static String dailyPath = "daily";
         final static String authority = "api.openweathermap.org";
-        final static String keyUnit = "unit";
+        final static String keyUnit = "units";
         final static String keyCnt = "cnt";
         final static String keyPostcode = "q";
 
@@ -134,9 +147,10 @@ public class ForecastFragment extends Fragment {
         @Override
         protected void onPostExecute(String[] str) {
             super.onPostExecute(str);
-
-            forecastAdapter.clear();
-            forecastAdapter.addAll(str);
+            if (str != null) {
+                forecastAdapter.clear();
+                forecastAdapter.addAll(str);
+            }
         }
 
         @Override
@@ -177,30 +191,44 @@ public class ForecastFragment extends Fragment {
                 if (urlConnection != null)
                     urlConnection.disconnect();
             }
-            if(weatherStr != null)
-            {
+            if (weatherStr != null) {
                 return parseForecasts(weatherStr);
             }
             return null;
         }
-        private String getReadableDateString(long time){
+
+        private String getReadableDateString(long time) {
             // Because the API returns a unix timestamp (measured in seconds),
             // it must be converted to milliseconds in order to be converted to valid date.
             SimpleDateFormat shortenedDateFormat = new SimpleDateFormat("EEE MMM dd", Locale.getDefault());
             return shortenedDateFormat.format(time);
         }
+
         private String[] parseForecasts(String weatherStr) {
             Forecasts forecasts = Forecasts.Create(weatherStr);
+            if (forecasts.getLocation().getCode() == 404) {
+                getActivity().runOnUiThread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getActivity(),
+                                        "404"
+                                        , Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                        }
+                );
+
+                return null;
+            }
             List<String> result = new ArrayList<String>();
             Forecast[] forecastArray = forecasts.getForecasts();
 
 
-
-            Calendar calendar = new GregorianCalendar(TimeZone.getDefault(),Locale.getDefault());
+            Calendar calendar = new GregorianCalendar(TimeZone.getDefault(), Locale.getDefault());
             calendar.setTimeInMillis(System.currentTimeMillis());
             int startDay = calendar.get(Calendar.DAY_OF_YEAR);
-            for(int i =0; i != forecastArray.length; ++i)
-            {
+            for (int i = 0; i != forecastArray.length; ++i) {
                 Forecast forecast = forecastArray[i];
                 long dateTime;
                 calendar.set(Calendar.DAY_OF_YEAR, startDay + i);
@@ -214,6 +242,7 @@ public class ForecastFragment extends Fragment {
             }
             return result.toArray(new String[0]);
         }
+
         private String formatHighLows(double high, double low) {
             // For presentation, assume the user doesn't care about tenths of a degree.
             long roundedHigh = Math.round(high);
