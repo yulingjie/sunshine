@@ -21,11 +21,12 @@ import android.widget.TextView;
 
 public class DetailActivity extends ActionBarActivity {
 
-    public static String DETAIL_EXTRA="com.ylj.sunshine.DetailActivity.forecast";
+    public static String DETAIL_EXTRA = "com.ylj.sunshine.DetailActivity.forecast";
 
     String forecast;
 
     ShareActionProvider shareActionProvider = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,12 +36,12 @@ public class DetailActivity extends ActionBarActivity {
         forecast = intent.getStringExtra(Intent.EXTRA_TEXT);
         Fragment fragment = new PlaceHolderFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(DETAIL_EXTRA,forecast);
+        bundle.putString(DETAIL_EXTRA, forecast);
         fragment.setArguments(bundle);
         this.getSupportFragmentManager()
                 .beginTransaction()
                 .add(R.id.container, fragment)
-        .commit();
+                .commit();
     }
 
     @Override
@@ -49,15 +50,30 @@ public class DetailActivity extends ActionBarActivity {
         getMenuInflater().inflate(R.menu.menu_detail, menu);
 
         MenuItem item = menu.findItem(R.id.menu_item_share);
-        shareActionProvider =(ShareActionProvider)MenuItemCompat.getActionProvider(item);
-        shareActionProvider.setShareIntent(getDefaultIntent());
+        shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+        shareActionProvider.setShareIntent(createIntent());
+        shareActionProvider.setOnShareTargetSelectedListener(new ShareActionProvider.OnShareTargetSelectedListener() {
+            @Override
+            public boolean onShareTargetSelected(ShareActionProvider source, Intent intent) {
+
+                return false;
+            }
+        });
         return true;
     }
 
-    Intent getDefaultIntent()
-    {
+    Intent createIntent() {
+        Intent forecastIntent = new Intent(Intent.ACTION_SEND);
+        forecastIntent.setType("text/plain");
+        forecastIntent.putExtra(Intent.EXTRA_TEXT, forecast);
+        forecastIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        return forecastIntent;
+    }
+
+    Intent getDefaultIntent() {
         Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.putExtra(Intent.EXTRA_TEXT,getString(R.string.default_weather));
+        intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.default_weather));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         intent.setType("text/plain");
         return intent;
     }
@@ -69,16 +85,16 @@ public class DetailActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
 
         //noinspection SimplifiableIfStatement
-        switch (item.getItemId())
-        {
+        switch (item.getItemId()) {
             case R.id.action_settings: {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
             }
             break;
-            case R.id.menu_item_share:{
+            case R.id.menu_item_share: {
                 Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.putExtra(Intent.EXTRA_TEXT,forecast);
+                intent.putExtra(Intent.EXTRA_TEXT, forecast);
+                intent.setType("text/plain");
                 shareActionProvider.setShareIntent(intent);
             }
             break;
@@ -86,21 +102,22 @@ public class DetailActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
-   public static class PlaceHolderFragment extends Fragment {
 
-       public PlaceHolderFragment()
-       {
+    public static class PlaceHolderFragment extends Fragment {
 
-       }
-       @Nullable
-       @Override
-       public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-           View view = inflater.inflate(R.layout.fragment_detail,container, false);
-           TextView textView = (TextView) view.findViewById(R.id.detail_text);
-           Bundle bundle = this.getArguments();
-           String forecast = bundle.getString(DetailActivity.DETAIL_EXTRA);
-           textView.setText(forecast);
-           return view;
-       }
-   }
+        public PlaceHolderFragment() {
+
+        }
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.fragment_detail, container, false);
+            TextView textView = (TextView) view.findViewById(R.id.detail_text);
+            Bundle bundle = this.getArguments();
+            String forecast = bundle.getString(DetailActivity.DETAIL_EXTRA);
+            textView.setText(forecast);
+            return view;
+        }
+    }
 }
