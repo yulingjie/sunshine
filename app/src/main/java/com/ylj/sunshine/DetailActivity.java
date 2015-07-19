@@ -4,6 +4,9 @@ package com.ylj.sunshine;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+
+
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,19 +14,25 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+
+import android.support.v7.widget.ShareActionProvider;
 import android.widget.TextView;
 
 
 public class DetailActivity extends ActionBarActivity {
 
     public static String DETAIL_EXTRA="com.ylj.sunshine.DetailActivity.forecast";
+
+    String forecast;
+
+    ShareActionProvider shareActionProvider = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         Intent intent = getIntent();
-        String forecast = intent.getStringExtra(Intent.EXTRA_TEXT);
+        forecast = intent.getStringExtra(Intent.EXTRA_TEXT);
         Fragment fragment = new PlaceHolderFragment();
         Bundle bundle = new Bundle();
         bundle.putString(DETAIL_EXTRA,forecast);
@@ -38,7 +47,19 @@ public class DetailActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_detail, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_share);
+        shareActionProvider =(ShareActionProvider)MenuItemCompat.getActionProvider(item);
+        shareActionProvider.setShareIntent(getDefaultIntent());
         return true;
+    }
+
+    Intent getDefaultIntent()
+    {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.putExtra(Intent.EXTRA_TEXT,getString(R.string.default_weather));
+        intent.setType("text/plain");
+        return intent;
     }
 
     @Override
@@ -53,6 +74,12 @@ public class DetailActivity extends ActionBarActivity {
             case R.id.action_settings: {
                 Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
+            }
+            break;
+            case R.id.menu_item_share:{
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.putExtra(Intent.EXTRA_TEXT,forecast);
+                shareActionProvider.setShareIntent(intent);
             }
             break;
         }

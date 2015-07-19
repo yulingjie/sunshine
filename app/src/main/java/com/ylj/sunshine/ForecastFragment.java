@@ -115,6 +115,20 @@ public class ForecastFragment extends Fragment {
                 this.startActivity(intent);
             }
             break;
+            case R.id.action_location:{
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this.getActivity());
+                String location = sharedPreferences.getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default));
+                Uri uri = Uri.parse("geo:0,0").buildUpon()
+                        .appendQueryParameter("q", location)
+                        .build();
+                intent.setData(uri);
+                if(intent.resolveActivity(this.getActivity().getPackageManager()) != null)
+                {
+                    startActivity(intent);
+                }
+            }
+            break;
         }
         return true;
     }
